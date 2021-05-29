@@ -1,0 +1,22 @@
+Create table UserLoginActivityinfo (UserName Varchar(20), DateTimeStamp DateTime, Loginfolder varchar(255))
+
+Use test
+
+select * from UserLoginActivityinfo
+
+Delete from UserLoginActivityinfo
+
+EXEC UserLogininfo
+
+
+
+---------------------------------------------------------------------------------------------------------
+HSBC: 
+
+Create table UserLoginActivityinfo_HSBC_GAM  (UserName Varchar(20), DateTimeStamp DateTime, Loginfolder varchar(255))
+
+Create table UserLoginActivityinfo_HSBC_GAM_Hybrid  (UserName Varchar(20), DateTimeStamp DateTime, Loginfolder varchar(255))
+
+Create table UserLoginActivityinfo_HSBC_PC (UserName Varchar(20), DateTimeStamp DateTime, Loginfolder varchar(255))
+
+ 

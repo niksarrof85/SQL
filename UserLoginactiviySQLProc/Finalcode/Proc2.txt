@@ -1,0 +1,40 @@
+
+Alter Procedure SendUserMail
+AS
+declare @currmonth varchar(10)
+declare @date varchar(20)
+set @date=left(CONVERT(VARCHAR(10),GETDATE(),103),2)
+set @currmonth = (select DateName( month , DateAdd( month,convert(int,substring(convert(varchar(10),20150101),5,2)), 0 ) - 1 ))
+declare @mailSub varchar(250)
+set @mailSub='User Login Activity As On : ' + @date+' ' + @currmonth +' '+ substring(convert(varchar(10),20150101),1,4)
+
+
+declare @mailSubSev varchar(250)
+set @mailSubSev='Local Setup'
+declare @mailSubAppr varchar(250)
+set @mailSubAppr='status1'
+DECLARE @tableHTML NVARCHAR(MAX);
+DECLARE @tableHTML1 NVARCHAR(MAX);
+DECLARE @tableHTM NVARCHAR(MAX) ;
+
+SET @tableHTML1 =
+N'<style type="text/css">h2, body {font-family: Arial, verdana;font-size:12px;} table{font-family: Arial, verdana;font-size:12px;}</style>'+
+    N'<H2>'+@mailSubSev+':</H2>'+
+    N'<table border="5">' +
+    N'<tr><th>User</th><th>Date&Time</th>' +
+    CAST ( ( SELECT td = UserName,'',
+                    td = DateTimeStamp, ''
+                    FROM UserLoginActivityinfo
+              FOR XML PATH('tr'), TYPE 
+    ) AS NVARCHAR(MAX) ) +
+    N'</table>' ;
+
+
+
+
+set @tableHTML=@tableHTML1
+
+EXEC msdb.dbo.sp_send_dbmail @recipients='Nikhil.soni@vichara.com;',
+    @subject = @mailSub,
+    @body = @tableHTML,
+    @body_format = 'HTML';
