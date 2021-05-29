@@ -1,0 +1,26 @@
+--Create table UserLoginActivityinfo_HSBC_GAM  (UserName Varchar(255), DateTimeStamp DateTime, Loginfolder varchar(255))
+--Create table UserLoginActivityinfo_HSBC_GAM_Hybrid  (UserName Varchar(255), DateTimeStamp DateTime, Loginfolder varchar(255))
+--Create table UserLoginActivityinfo_HSBC_PC (UserName Varchar(255), DateTimeStamp DateTime, Loginfolder varchar(255))
+
+ --Drop table UserLoginActivityinfo_HSBC_GAM
+ --Drop table UserLoginActivityinfo_HSBC_GAM_Hybrid
+ --Drop table UserLoginActivityinfo_HSBC_PC
+ 
+ --Drop Procedure UserLogininfo_HSBC_GAM
+ --Drop Procedure UserLogininfo_HSBC_GAM_Hybrid 
+ --Drop Procedure UserLogininfo_HSBC_PC
+ --Drop Procedure SendUserMail
+ 
+ select * from UserLoginActivityinfo_HSBC_GAM
+ select * from UserLoginActivityinfo_HSBC_GAM_Hybrid
+ select * from UserLoginActivityinfo_HSBC_PC
+ 
+ Delete from UserLoginActivityinfo_HSBC_GAM
+ Delete from UserLoginActivityinfo_HSBC_GAM_Hybrid
+ Delete from UserLoginActivityinfo_HSBC_PC
+ 
+ EXEC UserLogininfo_HSBC_GAM
+ EXEC UserLogininfo_HSBC_GAM_Hybrid
+ EXEC UserLogininfo_HSBC_PC
+ Exec SendUserMail
+ 

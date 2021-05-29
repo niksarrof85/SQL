@@ -1,0 +1,133 @@
+USE [Intex]
+GO
+/****** Object:  StoredProcedure [dbo].[UserLogininfo_HSBC_GAM_Hybrid]    Script Date: 02/02/2015 23:11:28 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER Procedure [dbo].[UserLogininfo_HSBC_GAM_Hybrid]
+As
+DECLARE @CMD1 varchar(5000) 
+DECLARE @CMD2 varchar(5000)
+DECLARE @FilePath varchar(200)
+DECLARE @i varchar(5000)
+DECLARE @j Varchar(5000)
+DECLARE @k int
+set @k=1
+
+
+
+CREATE TABLE #OriginalFileList (
+Col1 varchar(1000) NULL
+)
+
+CREATE TABLE #ParsedFileList (
+PFLID INT PRIMARY KEY IDENTITY (1,1) NOT NULL,
+DateTimeStamp datetime NOT NULL,
+FileSize varchar(50) NOT NULL,
+FileName1 varchar (255) NOT NULL
+)
+
+SELECT @CMD1 = ''
+SELECT @CMD2 = '' 
+SELECT @FilePath = '\\172.35.16.25\vRMBSdata\vRMBSLogs\Portal2008\vabssolutions\exceptionlog'
+
+SELECT @CMD1 = 'master.dbo.xp_cmdshell ' + char(39) + 'dir ' + @FilePath + '\*.*' + char(39)
+
+SELECT @CMD2 = 'INSERT INTO #OriginalFileList(Col1)' + char(13) + 'EXEC ' + @CMD1
+
+EXEC (@CMD2)
+
+DELETE FROM #OriginalFileList
+WHERE COL1 IS NULL
+
+DELETE FROM #OriginalFileList
+WHERE COL1 LIKE '%Volume%'
+
+DELETE FROM #OriginalFileList
+WHERE COL1 LIKE '%Directory%'
+
+DELETE FROM #OriginalFileList
+WHERE COL1 LIKE '%bytes%'
+
+Delete from #ParsedFileList 
+where FileName1 Like '%.%'
+
+
+INSERT INTO #ParsedFileList (DateTimeStamp, FileSize, FileName1)
+SELECT LTRIM(SUBSTRING (Col1, 1, 20)) AS 'DateTimeStamp',
+LTRIM(SUBSTRING (Col1, 21, 18)) AS 'FileSize',
+LTRIM(SUBSTRING (Col1, 40, 1000)) AS 'FileName1'
+FROM #OriginalFileList
+
+Delete from #ParsedFileList 
+where FileName1 Like '%.%'
+
+delete from #ParsedFileList 
+where datediff(DD,datetimestamp,Getdate())> 2
+
+CREATE TABLE #OriginalFileList1 (
+Col1 varchar(1000) NULL, Col2 varchar(1000))
+
+CREATE TABLE #ParsedFileList1 (
+PFLID INT PRIMARY KEY IDENTITY (1,1) NOT NULL,
+DateTimeStamp datetime NOT NULL,
+FileSize varchar(50) NOT NULL,
+FileName1 varchar (255) NOT NULL,
+Usera varchar(255))
+
+
+select Filename1 , Row_number() over (order by Filename1) as i into #c from #ParsedFileList
+while (@k < (select max(i) from #c)+1 )
+begin
+set @i = (select Filename1 from #c where i = @k)
+set @j= '\\172.35.16.25\vRMBSdata\vRMBSLogs\Portal2008\vabssolutions\exceptionlog\'+ @i
+SELECT @CMD1 = ''
+SELECT @CMD2 = '' 
+SELECT @CMD1 = 'master.dbo.xp_cmdshell ' + char(39) + 'dir ' + @j + '\*.*' + char(39)
+SELECT @CMD2 = 'INSERT INTO #OriginalFileList1(Col1)' + char(13) + 'EXEC ' + @CMD1 
+EXEC (@CMD2)
+Update #OriginalFileList1 set Col2 = @i where col2 is null
+set @k = @k+1
+End
+
+DELETE FROM #OriginalFileList1
+WHERE COL1 IS NULL
+
+DELETE FROM #OriginalFileList1
+WHERE COL1 LIKE '%Volume%'
+
+DELETE FROM #OriginalFileList1
+WHERE COL1 LIKE '%Directory%'
+
+DELETE FROM #OriginalFileList1
+WHERE COL1 LIKE '%bytes%'
+
+
+INSERT INTO #ParsedFileList1 (DateTimeStamp, FileSize, FileName1,Usera)
+SELECT LTRIM(SUBSTRING (Col1, 1, 20)) AS 'DateTimeStamp',
+LTRIM(SUBSTRING (Col1, 21, 18)) AS 'FileSize',
+LTRIM(SUBSTRING (Col1, 40, 1000)) AS 'FileName1',col2
+FROM #OriginalFileList1
+
+Delete from #ParsedFileList1
+where FileName1 Like '%.%'
+
+delete from #ParsedFileList1 
+where datediff(DD,datetimestamp,Getdate())> 0
+
+Insert into UserLoginActivityinfo_HSBC_GAM_Hybrid (UserName,DateTimeStamp,Loginfolder)
+Select Usera,DateTimeStamp,FileName1 from #ParsedFileList1 order by Usera, DateTimeStamp desc
+
+Drop table #ParsedFileList1
+Drop table #OriginalFileList1
+Drop table #ParsedFileList
+Drop table #OriginalFileList
+Drop table #c
+
+
+
+if ((select count(*) from UserLoginActivityinfo_HSBC_GAM_Hybrid) = 0 )
+Begin
+insert into UserLoginActivityinfo_HSBC_GAM_Hybrid values('No User LoginActivities',GETDATE(),'No User LoginActivities')
+End
